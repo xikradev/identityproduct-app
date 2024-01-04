@@ -3,12 +3,14 @@ using identityproduct_app.Domain.Dto.Create;
 using identityproduct_app.Domain.Dto.Read;
 using identityproduct_app.Domain.Models;
 using identityproduct_app.Domain.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace identityproduct_app.webapi.Controllers
 {
     [ApiController]
     [Route("[Controller]")]
+    [Authorize]
     public class ProductController : ControllerBase
     {
         private readonly IProductService _service;
