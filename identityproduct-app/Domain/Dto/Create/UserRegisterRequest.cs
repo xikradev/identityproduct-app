@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using identityproduct_app.Domain.Enum;
+using System.ComponentModel.DataAnnotations;
 
 namespace identityproduct_app.Domain.Dto.Create
 {
@@ -13,5 +14,8 @@ namespace identityproduct_app.Domain.Dto.Create
         [Required(ErrorMessage = "O campo {0} é obrigatório.")]
         [Compare(nameof(Password), ErrorMessage = "As senhas devem ser iguais.")]
         public string ConfirmPassword { get; set; }
+        [Required(ErrorMessage = "O campo {0} é obrigatório.")]
+        [EnumDataType(typeof(RoleEnum), ErrorMessage = "A propriedade Role deve ser 'Admin' ou 'User'.")]
+        public string Role { get; set; }
     }
 }

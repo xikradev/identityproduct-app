@@ -1,7 +1,7 @@
-﻿using identityproduct_app.Config;
-using identityproduct_app.Domain.Dto.Create;
+﻿using identityproduct_app.Domain.Dto.Create;
 using identityproduct_app.Domain.Dto.Read;
 using identityproduct_app.Domain.Services.Interfaces;
+using identityproduct_app.Identity.Config;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using System.IdentityModel.Tokens.Jwt;
@@ -13,34 +13,47 @@ namespace identityproduct_app.Domain.Services
     {
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly JwtOptions _jwtOptions;
 
-        public IdentityService(IOptions<JwtOptions> jwtOptions, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager)
+        public IdentityService(IOptions<JwtOptions> jwtOptions, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, RoleManager<IdentityRole> roleManager)
         {
             _jwtOptions = jwtOptions.Value;
             _userManager = userManager;
             _signInManager = signInManager;
+            _roleManager = roleManager;
         }
 
         public async Task<UserRegisterResponse> UserRegister(UserRegisterRequest userRegister)
         {
+            var response = new UserRegisterResponse(false);
+
             var identityUser = new IdentityUser()
             {
                 UserName = userRegister.Email,
                 Email = userRegister.Email,
                 EmailConfirmed = true
             };
-            var result = await _userManager.CreateAsync(identityUser, userRegister.Password);
-            if (result.Succeeded)
+
+            if (await _roleManager.RoleExistsAsync(userRegister.Role.ToString()))
             {
+                var result = await _userManager.CreateAsync(identityUser, userRegister.Password);
+                if (!result.Succeeded)
+                {
+
+                    response.AddErrors(result.Errors.Select(r => r.Description));
+                    return response;
+                }
                 await _userManager.SetLockoutEnabledAsync(identityUser, false);
+                await _userManager.AddToRoleAsync(identityUser, userRegister.Role.ToString());
+                response = new UserRegisterResponse(true);
+                return response;
             }
-            var response = new UserRegisterResponse(result.Succeeded);
-            if(!result.Succeeded && result.Errors.Count() > 0)
+            else
             {
-                response.AddErrors(result.Errors.Select(r => r.Description));
+                response.AddError("this role does not exist.");
+                return response;
             }
-            return response;
         }
 
         public async Task<UserLoginResponse> UserLogin(UserLoginRequest userLogin)

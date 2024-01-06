@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using identityproduct_app.Domain.Dto.Create;
 using identityproduct_app.Domain.Dto.Read;
+using identityproduct_app.Domain.Enum;
 using identityproduct_app.Domain.Models;
 using identityproduct_app.Domain.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -98,6 +99,8 @@ namespace identityproduct_app.webapi.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Policy = "BusinessHours")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Delete(int id)
         {
             Product product = await _service.GetProductById(id);

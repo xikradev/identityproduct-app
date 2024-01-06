@@ -1,9 +1,12 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using identityproduct_app.Identity.Config;
+using identityproduct_app.Identity.PolicyRequirements;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
-namespace identityproduct_app.Config
+namespace identityproduct_app.Identity.Config
 {
     public static class AuthenticationSetup
     {
@@ -41,7 +44,7 @@ namespace identityproduct_app.Config
                 IssuerSigningKey = securityKey,
 
                 RequireExpirationTime = true,
-                ValidateLifetime= true,
+                ValidateLifetime = true,
 
                 ClockSkew = TimeSpan.Zero
             };
@@ -53,6 +56,16 @@ namespace identityproduct_app.Config
             }).AddJwtBearer(options =>
             {
                 options.TokenValidationParameters = tokenValidationParameters;
+            });
+        }
+
+        public static void AddAuthorizationPolices(this IServiceCollection services)
+        {
+            services.AddSingleton<IAuthorizationHandler, BusinessHoursHandler>();
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("BusinessHours", policy =>
+                    policy.Requirements.Add(new BusinessHoursRequirement()));
             });
         }
     }

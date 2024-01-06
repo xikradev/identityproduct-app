@@ -1,15 +1,16 @@
-using identityproduct_app.Config;
 using identityproduct_app.Data.Context;
 using identityproduct_app.Data.Repositories;
 using identityproduct_app.Data.Repositories.Interfaces;
 using identityproduct_app.Domain.Dto.Profiles;
 using identityproduct_app.Domain.Services;
 using identityproduct_app.Domain.Services.Interfaces;
+using identityproduct_app.Identity.Config;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+
 
 // Add services to the container.
 
@@ -65,13 +66,33 @@ builder.Services.AddAutoMapper(config =>
 
 }, typeof(Program));
 
+#region IdentityConfig
+
 builder.Services.AddDefaultIdentity<IdentityUser>()
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
-builder.Services.AddAuthentication(builder.Configuration);
 
+var serviceProvider = builder.Services.BuildServiceProvider();
+var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+string[] roleNames = { "Admin", "User" };
+IdentityResult roleResult;
+
+foreach (var roleName in roleNames)
+{
+    var roleExist = await roleManager.RoleExistsAsync(roleName);
+    if (!roleExist)
+    {
+        roleResult = await roleManager.CreateAsync(new IdentityRole(roleName));
+    }
+}
+
+builder.Services.AddAuthentication(builder.Configuration);
+#endregion
+
+builder.Services.AddAuthorizationPolices();
 builder.Services.AddScoped<IIdentityService, IdentityService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();

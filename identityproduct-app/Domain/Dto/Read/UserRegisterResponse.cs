@@ -10,5 +10,10 @@
         public UserRegisterResponse(bool success = true) : this() { Success = success; }
 
         public void AddErrors(IEnumerable<string> errors) => Errors.AddRange(errors);
+
+        public void AddError(string error)
+        {
+            Errors.Add(error);
+        }
     }
 }
